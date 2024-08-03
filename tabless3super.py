@@ -1,5 +1,8 @@
 import boto3
 from trp import Document
+from Textract.detecttexts3super import detectTextS3
+from S3.createfile import create_file
+
 
 def extractTablesS3(bucket_name, document_name):
     # Document
@@ -25,14 +28,22 @@ def extractTablesS3(bucket_name, document_name):
     #print(response)
     
     doc = Document(response)
-    print(doc)
+    #print(doc)
+    #Create text file
+    text_body = ''
     #'''Commented out for in loop to test doc object
     for page in doc.pages:
          # Print tables
         for table in page.tables:
             for r, row in enumerate(table.rows):
                 for c, cell in enumerate(row.cells):
-                    print("Table[{}][{}] = {}".format(r, c, cell.text))
+                    #print("Table[{}][{}] = {}".format(r, c, cell.text))
+                    text_body = "Table[{}][{}] = {}".format(r, c, cell.text) + "\n"
                     
+    if detectTextS3(s3BucketName, document_name) == True:
+        create_file(s3BucketName, document_name, text_body, session=None)
+        print('success')
+    else:
+        print('no dice')
 if(__name__=='__main__'):
     extractTablesS3('super-bill-bucket', 'invoice_10.png')
